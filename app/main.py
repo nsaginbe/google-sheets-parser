@@ -192,11 +192,45 @@ async def get_available_rooms(request: AvailabilityRequest):
             detail="Parser not initialized",
         )
 
+    # Auto-load calendar if not loaded
     if not hasattr(parser, "sheet_data") or parser.sheet_data is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Calendar not loaded. Call /calendar/load first.",
-        )
+        try:
+            import os
+            from dotenv import load_dotenv
+
+            load_dotenv()
+
+            # Get values from environment variables
+            spreadsheet_id = os.getenv("SPREADSHEET_ID")
+            sheet_name = os.getenv("SHEET_NAME")
+            date_start_cell = os.getenv("DATE_START_CELL")
+            date_start = os.getenv("DATE_START")
+
+            if not spreadsheet_id:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Calendar not loaded and SPREADSHEET_ID not found in environment variables. Call /calendar/load first or set SPREADSHEET_ID in environment variables.",
+                )
+
+            logger.info("Calendar not loaded. Attempting to auto-load from environment variables...")
+            success = parser.load_calendar(
+                spreadsheet_id, sheet_name, date_start_cell, date_start
+            )
+
+            if not success:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Failed to auto-load calendar. Check spreadsheet ID and permissions.",
+                )
+            logger.info("Calendar auto-loaded successfully")
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Error auto-loading calendar: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error auto-loading calendar: {str(e)}",
+            )
 
     try:
         from datetime import datetime
