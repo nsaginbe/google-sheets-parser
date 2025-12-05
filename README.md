@@ -72,6 +72,43 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
 ```
 
+### Docker Deployment
+
+**Prerequisites:**
+- Docker and Docker Compose installed
+
+**Quick Start:**
+
+1. Copy environment template:
+```bash
+cp env.example .env
+```
+
+2. Edit `.env` file with your configuration (Google credentials, spreadsheet ID, etc.)
+
+3. Build and start with Docker Compose:
+```bash
+docker compose up -d --build
+```
+
+4. Or use the deployment script:
+```bash
+chmod +x deploy.sh
+./deploy.sh
+```
+
+5. View logs:
+```bash
+docker compose logs -f
+```
+
+6. Stop the service:
+```bash
+docker compose down
+```
+
+**For Digital Ocean Droplet deployment**, see [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions.
+
 The API will be available at:
 - API: http://localhost:8000
 - Interactive Docs (Swagger): http://localhost:8000/docs
