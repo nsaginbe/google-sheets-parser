@@ -184,7 +184,7 @@ async def get_available_rooms(request: AvailabilityRequest):
     
     - **check_in**: Check-in date (inclusive)
     - **check_out**: Check-out date (inclusive)
-    - **category_filter**: Category filter (e.g., "Deluxe"). Empty string means search in all categories
+    - **category_filter**: Category filter (e.g., "Deluxe"). Empty string or "ALL" means search in all categories
     """
     if parser is None:
         raise HTTPException(

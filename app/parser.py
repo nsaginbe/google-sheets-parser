@@ -829,9 +829,13 @@ class HotelBookingParser:
             ] and room_number.lower() in ["№ комнаты", "room", "room number", "room #"]:
                 continue
 
-            # Apply category filter if specified (empty string means no filter)
-            if category_filter and category_filter.strip() and category.lower() != category_filter.lower():
-                continue
+            # Apply category filter if specified (empty string or "ALL" means no filter)
+            # Normalize "ALL" to be treated as no filter
+            if category_filter:
+                normalized_filter = category_filter.strip().upper()
+                # Skip filtering if "ALL" is specified
+                if normalized_filter != "ALL" and category.lower() != category_filter.strip().lower():
+                    continue
 
             is_available = True
             occupied_dates = []

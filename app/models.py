@@ -30,7 +30,7 @@ class AvailabilityRequest(BaseModel):
 
     check_in: date = Field(..., description="Check-in date (inclusive)")
     check_out: date = Field(..., description="Check-out date (inclusive). Must be >= check_in")
-    category_filter: str = Field("", description="Category filter. Empty string means search in all categories")
+    category_filter: str = Field("", description='Category filter (e.g., "Deluxe"). Empty string or "ALL" means search in all categories')
 
 
 class AvailabilityResponse(BaseModel):
