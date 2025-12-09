@@ -12,9 +12,7 @@ services:
     env_file:
       - .env
     volumes:
-      # Mount key.json if it exists (for Google credentials)
       - ./key.json:/app/key.json:ro
-      # Mount .env file if needed (optional, env_file handles this)
       - ./.env:/app/.env:ro
     environment:
       - TZ=UTC
