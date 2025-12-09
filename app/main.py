@@ -7,13 +7,12 @@ from typing import Optional
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from fastapi.security import OAuth2PasswordRequestForm
 
 from app.auth import (authenticate_user, get_current_user, issue_token_pair,
                       verify_refresh_token)
 from app.models import (AvailabilityRequest, AvailabilityResponse,
                         CalendarInfo, ConnectionCheckResponse,
-                        LoadCalendarRequest, LoadCalendarResponse,
+                        LoadCalendarRequest, LoadCalendarResponse, LoginRequest,
                         RefreshRequest, RoomAvailability, TokenPair)
 from app.parser import Parser
 
@@ -62,12 +61,12 @@ async def health_check():
 
 
 @app.post("/auth/login", response_model=TokenPair, tags=["Auth"])
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    if not authenticate_user(form_data.username, form_data.password):
+async def login(body: LoginRequest):
+    if not authenticate_user(body.username, body.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
         )
-    return issue_token_pair(form_data.username)
+    return issue_token_pair(body.username)
 
 
 @app.post("/auth/refresh", response_model=TokenPair, tags=["Auth"])

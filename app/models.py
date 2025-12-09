@@ -77,3 +77,8 @@ class TokenPair(BaseModel):
 
 class RefreshRequest(BaseModel):
     refresh_token: str
+
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
