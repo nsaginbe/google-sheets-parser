@@ -67,3 +67,13 @@ class ConnectionCheckResponse(BaseModel):
     spreadsheet_accessible: Optional[bool] = None
     spreadsheet_title: Optional[str] = None
     error: Optional[str] = None
+
+
+class TokenPair(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
+
+
+class RefreshRequest(BaseModel):
+    refresh_token: str

@@ -4,14 +4,17 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.security import OAuth2PasswordRequestForm
 
+from app.auth import (authenticate_user, get_current_user, issue_token_pair,
+                      verify_refresh_token)
 from app.models import (AvailabilityRequest, AvailabilityResponse,
                         CalendarInfo, ConnectionCheckResponse,
                         LoadCalendarRequest, LoadCalendarResponse,
-                        RoomAvailability)
+                        RefreshRequest, RoomAvailability, TokenPair)
 from app.parser import Parser
 
 logging.basicConfig(
@@ -58,15 +61,34 @@ async def health_check():
     return {"status": "healthy", "parser_initialized": parser is not None}
 
 
+@app.post("/auth/login", response_model=TokenPair, tags=["Auth"])
+async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    if not authenticate_user(form_data.username, form_data.password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
+        )
+    return issue_token_pair(form_data.username)
+
+
+@app.post("/auth/refresh", response_model=TokenPair, tags=["Auth"])
+async def refresh_tokens(request: RefreshRequest):
+    username = verify_refresh_token(request.refresh_token)
+    return issue_token_pair(username)
+
+
 @app.get("/connection/check", response_model=ConnectionCheckResponse)
-async def check_connection_get(spreadsheet_id: Optional[str] = None):
+async def check_connection_get(
+    spreadsheet_id: Optional[str] = None, current_user: str = Depends(get_current_user)
+):
     _require_parser()
     result = parser.check_connection(spreadsheet_id)
     return ConnectionCheckResponse(**result)
 
 
 @app.post("/calendar/load", response_model=LoadCalendarResponse, tags=["Calendar"])
-async def load_calendar(request: LoadCalendarRequest):
+async def load_calendar(
+    request: LoadCalendarRequest, current_user: str = Depends(get_current_user)
+):
     _require_parser()
 
     spreadsheet_id = request.spreadsheet_id or os.getenv("SPREADSHEET_ID")
@@ -90,7 +112,7 @@ async def load_calendar(request: LoadCalendarRequest):
 
 
 @app.get("/calendar/info", response_model=CalendarInfo, tags=["Calendar"])
-async def get_calendar_info():
+async def get_calendar_info(current_user: str = Depends(get_current_user)):
     _require_parser()
     if not parser.date_column_map:
         raise HTTPException(
@@ -101,7 +123,9 @@ async def get_calendar_info():
 
 
 @app.post("/rooms/available", response_model=AvailabilityResponse, tags=["Rooms"])
-async def get_available_rooms(request: AvailabilityRequest):
+async def get_available_rooms(
+    request: AvailabilityRequest, current_user: str = Depends(get_current_user)
+):
     _require_parser()
     if not parser.sheet_data:
         raise HTTPException(
