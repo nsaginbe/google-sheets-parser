@@ -28,6 +28,7 @@ class AvailabilityRequest(BaseModel):
     check_in: date = Field(...)
     check_out: date = Field(...)
     category_filter: str = Field("ALL")
+    access_token: Optional[str] = Field(default=None)
 
 
 class AvailabilityResponse(BaseModel):

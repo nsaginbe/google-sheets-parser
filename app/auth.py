@@ -90,6 +90,19 @@ def verify_refresh_token(refresh_token: str) -> str:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid refresh token",
+    )
+    return username
+
+
+def verify_access_token(access_token: str) -> str:
+    payload = decode_token(
+        access_token, _require_env("ACCESS_TOKEN_SECRET"), expected_type="access"
+    )
+    username = payload.get("sub")
+    if not username:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication credentials",
         )
     return username
 
@@ -117,13 +130,4 @@ def issue_token_pair(username: str) -> Dict[str, str]:
 
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)) -> str:
     token = credentials.credentials
-    payload = decode_token(
-        token, _require_env("ACCESS_TOKEN_SECRET"), expected_type="access"
-    )
-    username = payload.get("sub")
-    if not username:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication credentials",
-        )
-    return username
+    return verify_access_token(token)

@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.auth import (authenticate_user, get_current_user, issue_token_pair,
-                      verify_refresh_token)
+                      verify_access_token, verify_refresh_token)
 from app.models import (AvailabilityRequest, AvailabilityResponse,
                         CalendarInfo, ConnectionCheckResponse,
                         LoadCalendarRequest, LoadCalendarResponse, LoginRequest,
@@ -131,9 +131,15 @@ async def get_calendar_info(current_user: str = Depends(get_current_user)):
 
 
 @app.post("/rooms/available", response_model=AvailabilityResponse, tags=["Rooms"])
-async def get_available_rooms(
-    request: AvailabilityRequest, current_user: str = Depends(get_current_user)
-):
+async def get_available_rooms(request: AvailabilityRequest):
+    if not request.access_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="access_token must be provided in request body",
+        )
+
+    verify_access_token(request.access_token)
+
     _require_parser()
 
     if not parser.sheet_data:
