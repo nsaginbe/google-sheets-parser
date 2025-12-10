@@ -5,10 +5,10 @@ from typing import Any, Dict
 
 import jwt
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 ALGORITHM = "HS256"
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+bearer_scheme = HTTPBearer(auto_error=True)
 
 
 def _require_env(name: str) -> str:
@@ -115,7 +115,8 @@ def issue_token_pair(username: str) -> Dict[str, str]:
     }
 
 
-def get_current_user(token: str = Depends(oauth2_scheme)) -> str:
+def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)) -> str:
+    token = credentials.credentials
     payload = decode_token(
         token, _require_env("ACCESS_TOKEN_SECRET"), expected_type="access"
     )

@@ -55,6 +55,15 @@ def _require_parser():
         )
 
 
+def _auto_load_calendar():
+    spreadsheet_id = os.getenv("SPREADSHEET_ID")
+    sheet_name = os.getenv("SHEET_NAME")
+    date_start_cell = os.getenv("DATE_START_CELL")
+    date_start = os.getenv("DATE_START")
+
+    parser.load_calendar(spreadsheet_id, sheet_name, date_start_cell, date_start)
+
+
 @app.get("/health", tags=["Health"])
 async def health_check():
     return {"status": "healthy", "parser_initialized": parser is not None}
@@ -126,11 +135,9 @@ async def get_available_rooms(
     request: AvailabilityRequest, current_user: str = Depends(get_current_user)
 ):
     _require_parser()
+
     if not parser.sheet_data:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Calendar not loaded",
-        )
+        _auto_load_calendar()
 
     if request.check_out < request.check_in:
         raise HTTPException(
