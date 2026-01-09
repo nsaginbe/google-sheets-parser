@@ -69,24 +69,24 @@ async def health_check():
     return {"status": "healthy", "parser_initialized": parser is not None}
 
 
-@app.post("/auth/login", response_model=TokenPair, tags=["Auth"])
-async def login(body: LoginRequest):
-    if not authenticate_user(body.username, body.password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
-        )
-    return issue_token_pair(body.username)
+# @app.post("/auth/login", response_model=TokenPair, tags=["Auth"])
+# async def login(body: LoginRequest):
+#     if not authenticate_user(body.username, body.password):
+#         raise HTTPException(
+#             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
+#         )
+#     return issue_token_pair(body.username)
 
 
-@app.post("/auth/refresh", response_model=TokenPair, tags=["Auth"])
-async def refresh_tokens(request: RefreshRequest):
-    username = verify_refresh_token(request.refresh_token)
-    return issue_token_pair(username)
+# @app.post("/auth/refresh", response_model=TokenPair, tags=["Auth"])
+# async def refresh_tokens(request: RefreshRequest):
+#     username = verify_refresh_token(request.refresh_token)
+#     return issue_token_pair(username)
 
 
-@app.get("/connection/check", response_model=ConnectionCheckResponse)
+@app.get("/connection/check", response_model=ConnectionCheckResponse, tags=["Health"])
 async def check_connection_get(
-    spreadsheet_id: Optional[str] = None, current_user: str = Depends(get_current_user)
+    spreadsheet_id: Optional[str] = None
 ):
     _require_parser()
     result = parser.check_connection(spreadsheet_id)
@@ -95,7 +95,7 @@ async def check_connection_get(
 
 @app.post("/calendar/load", response_model=LoadCalendarResponse, tags=["Calendar"])
 async def load_calendar(
-    request: LoadCalendarRequest, current_user: str = Depends(get_current_user)
+    request: LoadCalendarRequest
 ):
     _require_parser()
 
@@ -120,7 +120,7 @@ async def load_calendar(
 
 
 @app.get("/calendar/info", response_model=CalendarInfo, tags=["Calendar"])
-async def get_calendar_info(current_user: str = Depends(get_current_user)):
+async def get_calendar_info():
     _require_parser()
     if not parser.date_column_map:
         raise HTTPException(
@@ -132,13 +132,13 @@ async def get_calendar_info(current_user: str = Depends(get_current_user)):
 
 @app.post("/rooms/available", response_model=AvailabilityResponse, tags=["Rooms"])
 async def get_available_rooms(request: AvailabilityRequest):
-    if not request.access_token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="access_token must be provided in request body",
-        )
+    # if not request.access_token:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_401_UNAUTHORIZED,
+    #         detail="access_token must be provided in request body",
+    #     )
 
-    verify_access_token(request.access_token)
+    # verify_access_token(request.access_token)
 
     _require_parser()
 
